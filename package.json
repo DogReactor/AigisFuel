@@ -1,0 +1,35 @@
+{
+  "name": "aigis-fuel",
+  "version": "0.1.0",
+  "description": "Fuel!",
+  "main": "./dist/AL.js",
+  "repository": "https://github.com/DogReactor/AigisFuel",
+  "author": {
+    "name": "MoonDropX",
+    "email": "minalinskyx@hotmail.com"
+  },
+  "license": "WTFPL",
+  "scripts": {
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/node": "^10.10.3",
+    "husky": "^1.0.0-rc.15",
+    "lint-staged": "^7.3.0",
+    "prettier": "^1.14.3",
+    "tslint": "^5.11.0",
+    "tslint-config-prettier": "^1.15.0",
+    "typescript": "^3.0.3"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "tslint --fix",
+      "prettier --write",
+      "git add"
+    ],
+    "*.{less,md}": [
+      "prettier --write",
+      "git add"
+    ]
+  }
+}
