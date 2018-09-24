@@ -303,7 +303,7 @@ exports.ALAR = ALAR;
 class ALTX {
     constructor(buffer) {
         this.Sprites = {};
-        this.Image = {};
+        this.Image = Buffer.alloc(0);
         this.Width = 0;
         this.Height = 0;
         this.Buffer = buffer;
@@ -367,6 +367,7 @@ class ALTX {
 exports.ALTX = ALTX;
 class ALIG {
     constructor(buffer) {
+        this.Count = 0;
         this.Palette = [];
         this.PaletteSize = 0;
         this.Buffer = buffer;

@@ -372,7 +372,7 @@ export class ALTX implements AL {
   Form: number;
   Count: number;
   Sprites: { [key: number]: ALTX.FrameTable } = {};
-  Image = {};
+  Image = Buffer.alloc(0);
   FakeImage?: string;
   Width = 0;
   Height = 0;
@@ -443,7 +443,7 @@ export class ALIG implements AL {
   Vers: number;
   Form: string;
   PaletteForm: string;
-  Count?: number;
+  Count = 0;
   Width: number;
   Height: number;
   Size: number;

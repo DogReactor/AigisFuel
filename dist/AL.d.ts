@@ -117,7 +117,7 @@ export declare class ALTX implements AL {
     Sprites: {
         [key: number]: ALTX.FrameTable;
     };
-    Image: {};
+    Image: Buffer;
     FakeImage?: string;
     Width: number;
     Height: number;
@@ -131,7 +131,7 @@ export declare class ALIG implements AL {
     Vers: number;
     Form: string;
     PaletteForm: string;
-    Count?: number;
+    Count: number;
     Width: number;
     Height: number;
     Size: number;
