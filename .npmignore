@@ -3,7 +3,7 @@
 /src/
 .gitignore
 .npmignore
-.prettirerrc
+.prettierrc
 tslint.json
 tsconfig.json
 *.log
