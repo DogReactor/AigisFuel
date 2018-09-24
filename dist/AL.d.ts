@@ -56,7 +56,7 @@ export declare class ALTB implements AL {
     StringFieldSizePosition?: number;
     StringFieldSize?: number;
     StringFieldEntry?: number;
-    Label: string;
+    Label?: string;
     StringField: {
         [k: string]: any;
     };

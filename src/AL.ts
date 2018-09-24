@@ -181,7 +181,7 @@ export class ALTB implements AL {
   StringFieldSizePosition?: number;
   StringFieldSize?: number;
   StringFieldEntry?: number;
-  Label: string;
+  Label?: string;
   StringField: { [k: string]: any } = {};
   StringOffsetList: any[] = [];
   Headers: ALRD.Header[] = [];
@@ -217,7 +217,7 @@ export class ALTB implements AL {
       this.NameStartAddressOffset = br.Position;
       this.NameStartAddress = br.ReadDword();
     }
-    if (this.Form!=0x04) {
+    if (this.Form !== 0x04) {
       this.Label = br.ReadString(4);
     }
     const alrdBuffer = br.ReadBytes(this.TableEntry - br.Position);
