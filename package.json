@@ -1,8 +1,9 @@
 {
   "name": "aigis-fuel",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Fuel!",
   "main": "./dist/AL.js",
+  "types": "./dist/AL.d.ts",
   "repository": "https://github.com/DogReactor/AigisFuel",
   "author": {
     "name": "MoonDropX",
