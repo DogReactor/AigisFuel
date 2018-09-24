@@ -97,12 +97,12 @@ export declare namespace ALAR {
 }
 export declare namespace ALTX {
     interface Frame {
-        x: number;
-        y: number;
-        width: number;
-        height: number;
-        originX: number;
-        originY: number;
+        X: number;
+        Y: number;
+        Width: number;
+        Height: number;
+        OriginX: number;
+        OriginY: number;
     }
     interface FrameTable extends Array<Frame> {
         name?: string;

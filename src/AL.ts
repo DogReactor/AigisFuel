@@ -352,12 +352,12 @@ export namespace ALAR {
 
 export namespace ALTX {
   export interface Frame {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    originX: number;
-    originY: number;
+    X: number;
+    Y: number;
+    Width: number;
+    Height: number;
+    OriginX: number;
+    OriginY: number;
   }
 
   export interface FrameTable extends Array<Frame> {
@@ -406,18 +406,18 @@ export class ALTX implements AL {
         frameTable.name = frameName;
         for (let j = 0; j < frames; ++j) {
           const frame: ALTX.Frame = {
-            x: br.ReadWord(),
-            y: br.ReadWord(),
-            width: br.ReadWord(),
-            height: br.ReadWord(),
-            originX: 0,
-            originY: 0,
+            X: br.ReadWord(),
+            Y: br.ReadWord(),
+            Width: br.ReadWord(),
+            Height: br.ReadWord(),
+            OriginX: 0,
+            OriginY: 0,
           };
           frameTable.push(frame);
         }
         for (let j = 0; j < frames; ++j) {
-          frameTable[j].originX = br.ReadWord();
-          frameTable[j].originY = br.ReadWord();
+          frameTable[j].OriginX = br.ReadWord();
+          frameTable[j].OriginY = br.ReadWord();
         }
         this.Sprites[index] = frameTable;
       }
