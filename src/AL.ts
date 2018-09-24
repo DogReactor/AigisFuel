@@ -196,7 +196,7 @@ export class ALTB implements AL {
     this.Unknown1 = br.ReadWord();
     this.TableEntry = br.ReadWord();
     this.Size = br.ReadDword();
-    if (this.Form === 0x14 || this.Form === 0x1e) {
+    if (this.Form === 0x14 || this.Form === 0x1e || this.Form === 0x04) {
       this.StringFieldSizePosition = br.Position;
       this.StringFieldSize = br.ReadDword();
       this.StringFieldEntry = br.ReadDword();
@@ -217,7 +217,9 @@ export class ALTB implements AL {
       this.NameStartAddressOffset = br.Position;
       this.NameStartAddress = br.ReadDword();
     }
-    this.Label = br.ReadString(4);
+    if (this.Form!=0x04) {
+      this.Label = br.ReadString(4);
+    }
     const alrdBuffer = br.ReadBytes(this.TableEntry - br.Position);
     br.Seek(this.TableEntry, Origin.Begin);
     const alrd = new ALRD(alrdBuffer);
