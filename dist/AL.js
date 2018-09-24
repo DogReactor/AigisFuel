@@ -385,11 +385,6 @@ class ALIG {
         this.Unknown5 = br.ReadWord();
         this.Unknown6 = br.ReadWord();
         this.Unknown7 = br.ReadDword();
-        function extractChannel(pix, flag) {
-            const channel = pix % flag;
-            pix = (pix - channel) / flag;
-            return channel;
-        }
         function convert(x) {
             return Math.floor(x / 8) * 64 + (x % 8) * 9;
         }
@@ -410,10 +405,11 @@ class ALIG {
             case 'ABG5':
                 for (let i = 0; i < this.Size; ++i) {
                     const pix = br.ReadWord();
-                    let a = extractChannel(pix, 2);
-                    let b = extractChannel(pix, 32);
-                    let g = extractChannel(pix, 32);
-                    let r = extractChannel(pix, 32);
+                    const extractor = new ALIG.ChannelExtractor(pix);
+                    let a = extractor.extract(2);
+                    let b = extractor.extract(32);
+                    let g = extractor.extract(32);
+                    let r = extractor.extract(32);
                     r = convert(r);
                     g = convert(g);
                     b = convert(b);
@@ -424,10 +420,11 @@ class ALIG {
             case 'BGR5':
                 for (let i = 0; i < this.Size; ++i) {
                     const pix = br.ReadWord();
-                    let b = extractChannel(pix, 32);
-                    let g = extractChannel(pix, 32);
-                    let r = extractChannel(pix, 32);
-                    let a = extractChannel(pix, 2);
+                    const extractor = new ALIG.ChannelExtractor(pix);
+                    let b = extractor.extract(32);
+                    let g = extractor.extract(32);
+                    let r = extractor.extract(32);
+                    let a = extractor.extract(2);
                     r = convert(r);
                     g = convert(g);
                     b = convert(b);
@@ -438,24 +435,26 @@ class ALIG {
             case 'ABG4':
                 for (let i = 0; i < this.Size; ++i) {
                     const pix = br.ReadWord();
-                    let a = extractChannel(pix, 16);
-                    let b = extractChannel(pix, 16);
-                    let g = extractChannel(pix, 16);
-                    let r = extractChannel(pix, 16);
-                    r = Math.floor(r * (255 / 1) + 0.5);
-                    g = Math.floor(g * (255 / 1) + 0.5);
-                    b = Math.floor(b * (255 / 1) + 0.5);
-                    a = Math.floor(a * (255 / 1) + 0.5);
+                    const extractor = new ALIG.ChannelExtractor(pix);
+                    let a = extractor.extract(16);
+                    let b = extractor.extract(16);
+                    let g = extractor.extract(16);
+                    let r = extractor.extract(16);
+                    r = Math.floor(r * (255 / 15) + 0.5);
+                    g = Math.floor(g * (255 / 15) + 0.5);
+                    b = Math.floor(b * (255 / 15) + 0.5);
+                    a = Math.floor(a * (255 / 15) + 0.5);
                     rawImage.push(r, g, b, a);
                 }
                 break;
             case 'BGR4':
                 for (let i = 0; i < this.Size; ++i) {
                     const pix = br.ReadWord();
-                    let b = extractChannel(pix, 16);
-                    let g = extractChannel(pix, 16);
-                    let r = extractChannel(pix, 16);
-                    let a = extractChannel(pix, 16);
+                    const extractor = new ALIG.ChannelExtractor(pix);
+                    let b = extractor.extract(16);
+                    let g = extractor.extract(16);
+                    let r = extractor.extract(16);
+                    let a = extractor.extract(16);
                     r = Math.floor(r * (255 / 1) + 0.5);
                     g = Math.floor(g * (255 / 1) + 0.5);
                     b = Math.floor(b * (255 / 1) + 0.5);
@@ -481,6 +480,19 @@ class ALIG {
     }
 }
 exports.ALIG = ALIG;
+(function (ALIG) {
+    class ChannelExtractor {
+        constructor(pix) {
+            this.pix = pix;
+        }
+        extract(length) {
+            const channel = this.pix % length;
+            this.pix = (this.pix - channel) / length;
+            return channel;
+        }
+    }
+    ALIG.ChannelExtractor = ChannelExtractor;
+})(ALIG = exports.ALIG || (exports.ALIG = {}));
 class ALOD {
     constructor(buffer) {
         this.Buffer = buffer;

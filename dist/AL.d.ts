@@ -146,6 +146,13 @@ export declare class ALIG implements AL {
     Unknown7: number;
     constructor(buffer: Buffer);
 }
+export declare namespace ALIG {
+    class ChannelExtractor {
+        private pix;
+        constructor(pix: number);
+        extract(length: number): number;
+    }
+}
 export declare class ALOD implements AL {
     Buffer: Buffer;
     Head: string;

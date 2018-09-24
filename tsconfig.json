@@ -19,5 +19,5 @@
     "strictNullChecks": true,
     "target": "es2017"
   },
-  "exclude": ["node_modules", "scripts", "dist"]
+  "exclude": ["node_modules", "scripts", "dist", "test"]
 }
