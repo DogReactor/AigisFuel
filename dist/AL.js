@@ -676,6 +676,7 @@ class ALMT {
                 return {
                     X: br.ReadDword(),
                     Y: br.ReadDword(),
+                    Z: br.ReadDword(),
                 };
             case 'Rot':
                 return br.ReadDword();
@@ -687,7 +688,7 @@ class ALMT {
                     Z: br.ReadFloat(),
                 };
             case 'Color3':
-                return [br.ReadFloat(), br.ReadFloat()];
+                return [br.ReadFloat(), br.ReadFloat(), br.ReadFloat()];
             default:
                 console.log(`Field not parsed: ${name}`);
                 return;
