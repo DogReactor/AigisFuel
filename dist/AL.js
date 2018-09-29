@@ -674,9 +674,9 @@ class ALMT {
                 return br.ReadFloat();
             case 'Pos':
                 return {
-                    X: br.ReadDword(),
-                    Y: br.ReadDword(),
-                    Z: br.ReadDword(),
+                    X: br.ReadFloat(),
+                    Y: br.ReadFloat(),
+                    Z: br.ReadFloat(),
                 };
             case 'Rot':
                 return br.ReadDword();
