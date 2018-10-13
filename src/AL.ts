@@ -7,19 +7,23 @@ function Align(offset: number, length: number) {
   return offset + (length - offset % length);
 }
 
-export interface AL {
+export class AL {
   Buffer: Buffer;
   Head: string;
   [k: string]: any;
-  Package: (path: string) => Buffer;
-}
-
-export class DefaultAL implements AL {
-  Buffer: Buffer;
-  Head: string;
   constructor(buffer: Buffer) {
     this.Buffer = buffer;
     this.Head = buffer.toString('utf-8', 0, 4);
+  }
+  public Package(path: string): Buffer {
+    return this.Buffer;
+  }
+
+}
+
+export class DefaultAL extends AL {
+  constructor(buffer: Buffer) {
+    super(buffer);
   }
   Package() {
     return this.Buffer;
@@ -175,9 +179,7 @@ export namespace ALRD {
   }
 }
 
-export class ALTB implements AL {
-  Buffer: Buffer;
-  Head: string;
+export class ALTB extends AL {
   Vers: number;
   Form: number;
   Count: number;
@@ -198,6 +200,7 @@ export class ALTB implements AL {
   Headers: ALRD.Header[] = [];
   Contents: any[] = [];
   constructor(buffer: Buffer) {
+    super(buffer);
     this.Buffer = buffer;
     const br = new BufferReader(buffer);
     this.Head = br.ReadString(4);
@@ -370,9 +373,7 @@ export class ALTB implements AL {
   }
 }
 
-export class ALAR implements AL {
-  Buffer: Buffer;
-  Head: string;
+export class ALAR extends AL {
   Files: ALAR.Entry[] = [];
   TocOffsetList: any[] = [];
   Vers: number;
@@ -384,6 +385,7 @@ export class ALAR implements AL {
   UnknownBytes: Buffer;
   DataOffset: number = 0;
   constructor(buffer: Buffer) {
+    super(buffer);
     this.Buffer = buffer;
     const br = new BufferReader(buffer);
     this.Head = br.ReadString(4);
@@ -562,9 +564,7 @@ export namespace ALTX {
   }
 }
 
-export class ALTX implements AL {
-  Buffer: Buffer;
-  Head: string;
+export class ALTX extends AL {
   Vers: number;
   Form: number;
   Count: number;
@@ -576,7 +576,7 @@ export class ALTX implements AL {
   Unknown1?: number;
   Unknown2?: number;
   constructor(buffer: Buffer) {
-    this.Buffer = buffer;
+    super(buffer);
     const br = new BufferReader(buffer);
     const startOffset = br.Position;
     this.Head = br.ReadString(4);
@@ -632,14 +632,9 @@ export class ALTX implements AL {
       this.FakeImage = br.ReadString(0x100);
     }
   }
-  Package() {
-    return this.Buffer;
-  }
 }
 
-export class ALIG implements AL {
-  Buffer: Buffer;
-  Head: string;
+export class ALIG extends AL {
   Vers: number;
   Form: string;
   PaletteForm: string;
@@ -657,6 +652,7 @@ export class ALIG implements AL {
   Unknown6: number;
   Unknown7: number;
   constructor(buffer: Buffer) {
+    super(buffer);
     this.Buffer = buffer;
     const br = new BufferReader(buffer);
     this.Head = br.ReadString(4);
@@ -765,9 +761,6 @@ export class ALIG implements AL {
     }
     this.Image = Buffer.from(rawImage);
   }
-  Package() {
-    return this.Buffer;
-  }
 }
 
 export namespace ALIG {
@@ -784,9 +777,7 @@ export namespace ALIG {
   }
 }
 
-export class ALOD implements AL {
-  Buffer: Buffer;
-  Head: string;
+export class ALOD extends AL {
   Vers: number;
   Form: number;
   Fields: string[];
@@ -797,7 +788,7 @@ export class ALOD implements AL {
   ALMTOffset: number;
   ALMT?: ALMT;
   constructor(buffer: Buffer) {
-    this.Buffer = buffer;
+    super(buffer);
     const br = new BufferReader(buffer);
     this.Head = br.ReadString(4);
     this.Vers = br.ReadByte();
@@ -884,9 +875,6 @@ export class ALOD implements AL {
       }
     }
   }
-  Package() {
-    return this.Buffer;
-  }
 }
 
 export namespace ALMT {
@@ -902,9 +890,7 @@ export namespace ALMT {
   }
 }
 
-export class ALMT implements AL {
-  Buffer: Buffer;
-  Head: string;
+export class ALMT extends AL {
   Vers: number;
   Unknown1: number;
   EntryCount: number;
@@ -921,6 +907,7 @@ export class ALMT implements AL {
   Unknown4: number;
   EntryOffset?: number;
   constructor(buffer: Buffer) {
+    super(buffer);
     this.Buffer = buffer;
     const br = new BufferReader(buffer);
     this.Head = br.ReadString(4);
@@ -1012,9 +999,6 @@ export class ALMT implements AL {
         entry[field.Name] = stream;
       });
     }
-  }
-  Package() {
-    return this.Buffer;
   }
   private parseField(name: string, br: BufferReader): any {
     switch (name) {
