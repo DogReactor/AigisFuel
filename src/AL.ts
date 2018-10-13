@@ -1,9 +1,17 @@
 import { BufferReader, Origin } from './BufferReader';
+import * as fs from 'fs';
+import * as pathLib from 'path'
+
+function Align(offset: number, length: number) {
+  if (offset % length === 0) { return offset };
+  return offset + (length - offset % length);
+}
 
 export interface AL {
   Buffer: Buffer;
   Head: string;
   [k: string]: any;
+  Package: (path: string) => Buffer;
 }
 
 export class DefaultAL implements AL {
@@ -12,6 +20,9 @@ export class DefaultAL implements AL {
   constructor(buffer: Buffer) {
     this.Buffer = buffer;
     this.Head = buffer.toString('utf-8', 0, 4);
+  }
+  Package() {
+    return this.Buffer;
   }
 }
 
@@ -178,9 +189,9 @@ export class ALTB implements AL {
   NameLength?: number;
   Name?: string;
   Size: number;
-  StringFieldSizePosition?: number;
-  StringFieldSize?: number;
-  StringFieldEntry?: number;
+  StringFieldSizePosition: number = 0;
+  StringFieldSize: number = 0;
+  StringFieldEntry: number = 0;
   Label?: string;
   StringField: { [k: string]: any } = {};
   StringOffsetList: any[] = [];
@@ -257,6 +268,106 @@ export class ALTB implements AL {
       this.Name = br.ReadString(this.NameLength);
     }
   }
+  Package(path: string) {
+    path = path.replace('.atb', '.txt');
+    if (!fs.existsSync(path)) {
+      return this.Buffer;
+    }
+    const replaceObject = this.readReplacementFile(fs.readFileSync(path, { encoding: 'utf-8' }));
+    if (replaceObject === null) { return this.Buffer };
+    const newStringField = this.GetStringField(this.ReplaceStringList(replaceObject));
+    const newOffsetList = newStringField.offsetList;
+    // 制作Offset变化Object
+    const offsetChanges: any = {};
+    if (this.StringOffsetList.length !== newOffsetList.length) { throw 'String数量错误' };
+    for (let i = 0; i < newOffsetList.length; i++) {
+      offsetChanges[this.StringOffsetList[i]] = newOffsetList[i];
+    }
+    // 取头、StringField、尾，计算长度。
+    let size = 0;
+    const head = this.Buffer.slice(0, this.StringFieldEntry);
+    const stringField = newStringField.buffer;
+    const tail = this.Buffer.slice(Align(this.StringFieldEntry + this.StringFieldSize, 4), this.Buffer.length);
+    const alignStringFieldLength = Align(stringField.length, 4);
+    size = head.length + alignStringFieldLength;
+    size += tail.length;
+    // 头的部分要修改StringSize，0x20项的地址，如果有name的话还要修改name的地址。
+    head.writeUInt32LE(alignStringFieldLength, this.StringFieldSizePosition);
+    for (let i = 0; i < this.Count; i++) {
+      const rowEntry = this.TableEntry + this.Size * i;
+      for (const header of this.Headers) {
+        if (header.Type === 0x20) {
+          const offset = rowEntry + header.Offset;
+          const stringFieldOffset = head.readUInt32LE(offset);
+          const newStringFieldOffset = offsetChanges[stringFieldOffset];
+          if (newStringFieldOffset !== undefined) {
+            head.writeUInt32LE(newStringFieldOffset, offset);
+          } else { throw '没有该offset'; }
+        }
+      }
+    }
+    if (this.NameStartAddress !== undefined && this.NameStartAddressOffset !== undefined) {
+      const newNameStart = this.NameStartAddress + (alignStringFieldLength - (this.NameStartAddress - this.StringFieldEntry))
+      head.writeUInt32LE(newNameStart, this.NameStartAddressOffset);
+    }
+
+    const newBuffer = Buffer.alloc(size, 0);
+    head.copy(newBuffer, 0, 0, head.length);
+    stringField.copy(newBuffer, head.length, 0, stringField.length);
+    tail.copy(newBuffer, head.length + alignStringFieldLength, 0, tail.length);
+    return newBuffer;
+  }
+  private readReplacementFile(text: string) {
+    const obj: any = {}
+    const row = text.split('\r\n');
+    let count = 0;
+    for (const i of row) {
+      const col = i.split('\t');
+      if (col.length === 2) {
+        count++;
+        obj[col[0]] = col[1];
+      }
+    }
+    console.log('Read Row', count);
+    return obj;
+  }
+  private ReplaceStringList(replaceObject: any) {
+    const ss = [];
+    if (this.StringField === undefined) { return null };
+    let count = 0;
+    for (const key in this.StringField) {
+      if (this.StringField.hasOwnProperty(key)) {
+        let s = this.StringField[key];
+        s = s.replace(/\n/g, '\\n');
+        const replaceS = replaceObject[s];
+        if (replaceS !== undefined) {
+          s = replaceS;
+          count++;
+        }
+        ss.push(s);
+      }
+
+    }
+    console.log('Replaced' + count);
+    return ss;
+  }
+  private GetStringField(stringList: string[] | null) {
+    if (stringList === null) { throw '该文件没有StringField' };
+    const bufferList = [];
+    const offsetList = [];
+    let offset = 0;
+    for (const i of stringList) {
+      offsetList.push(offset);
+      const s = i.replace(/\\n/g, '\n') + '\0';
+      const stringBuffer = Buffer.from(s, 'utf-8');
+      bufferList.push(stringBuffer);
+      offset += stringBuffer.length;
+    }
+    return {
+      offsetList,
+      buffer: Buffer.concat(bufferList),
+    }
+  }
 }
 
 export class ALAR implements AL {
@@ -267,11 +378,11 @@ export class ALAR implements AL {
   Vers: number;
   Unknown: number;
   Count: number;
-  Unknown1?: number;
-  Unknown2?: number;
+  DataOffsetByData: number = 0;
+  Unknown1: number = 0;
+  Unknown2: number = 0;
   UnknownBytes: Buffer;
-  DataOffset?: number;
-  DataOffsetByData?: number;
+  DataOffset: number = 0;
   constructor(buffer: Buffer) {
     this.Buffer = buffer;
     const br = new BufferReader(buffer);
@@ -311,6 +422,90 @@ export class ALAR implements AL {
       this.DataOffsetByData = this.Files[0].Address;
     }
   }
+  public Package(path: string) {
+    path = path.replace('.aar', '');
+    if (!fs.existsSync(path)) {
+      return this.Buffer;
+    }
+    // 依然是头 索引 文件区
+    // 头和索引的大小是不会变的，要改的是索引当中的Address和Size
+    // 先生成新的文件
+    const newFilesBufferArray: Buffer[] = [];
+    let offset = this.DataOffsetByData;
+    for (let i = 0; i < this.Files.length; i++) {
+      const entry = this.Files[i];
+      // 替换在这里进行
+      const content = entry.Content.Package(pathLib.join(path, entry.Name));
+      if (this.Vers === 2) {
+        const name = Buffer.alloc(0x22);
+        name.write(entry.Name);
+        name.writeUInt16LE(entry.Unknown3, 0x20);
+        newFilesBufferArray.push(name);
+        offset += 0x22;
+      }
+      entry.Address = offset;
+      entry.Size = content.byteLength;
+      newFilesBufferArray.push(content); offset += content.byteLength;
+      if (i === this.Files.length - 1) {
+        continue;
+      }
+      const newOffset = Align(offset, 4);
+      newFilesBufferArray.push(Buffer.alloc(newOffset - offset)); offset = newOffset;
+      if (this.Vers === 2) { newFilesBufferArray.push(Buffer.alloc(2)); offset += 2; }
+    }
+    const newFilesBuffer = Buffer.concat(newFilesBufferArray);
+    console.log(offset, newFilesBuffer.byteLength + this.DataOffsetByData, this.Buffer.byteLength);
+    // 总长度实际上就是offset了
+    const newBuffer = Buffer.alloc(offset);
+    offset = 0;
+    // 头
+    newBuffer.write('ALAR', 0); offset += 4;
+    newBuffer.writeInt8(this.Vers, offset); offset++;
+    newBuffer.writeInt8(this.Unknown, offset); offset++;
+    if (this.Vers === 2) {
+      newBuffer.writeUInt16LE(this.Count, offset); offset += 2;
+      this.UnknownBytes.copy(newBuffer, offset, 0, this.UnknownBytes.byteLength); offset += this.UnknownBytes.byteLength;
+    }
+    if (this.Vers === 3) {
+      newBuffer.writeUInt16LE(this.Count, offset); offset += 2;
+      newBuffer.writeUInt16LE(this.Unknown1, offset); offset += 2;
+      newBuffer.writeUInt16LE(this.Unknown2, offset); offset += 2;
+      this.UnknownBytes.copy(newBuffer, offset, 0, this.UnknownBytes.byteLength); offset += this.UnknownBytes.byteLength;
+      newBuffer.writeUInt16LE(this.DataOffset, offset); offset += 2;
+      for (let i = 0; i < this.Count; i++) {
+        newBuffer.writeUInt16LE(this.TocOffsetList[i], offset); offset += 2;
+      }
+      offset = Align(offset, 4);
+    }
+    // 索引
+    for (let i = 0; i < this.Count; i++) {
+      let entry = new ALAR.Entry();
+      entry = this.Files[i];
+      if (this.Vers === 2) {
+        // 固定长度16字节
+        newBuffer.writeUInt16LE(entry.Index, offset); offset += 2;
+        newBuffer.writeUInt16LE(entry.Unknown1, offset); offset += 2;
+        newBuffer.writeUInt32LE(entry.Address, offset); offset += 4;
+        newBuffer.writeUInt32LE(entry.Size, offset); offset += 4;
+        entry.Unknown2.copy(newBuffer, offset, 0, entry.Unknown2.byteLength); offset += entry.Unknown2.byteLength;
+      }
+      if (this.Vers === 3) {
+        newBuffer.writeUInt16LE(entry.Index, offset); offset += 2;
+        newBuffer.writeUInt16LE(entry.Unknown1, offset); offset += 2;
+        newBuffer.writeUInt32LE(entry.Address, offset); offset += 4;
+        newBuffer.writeUInt32LE(entry.Size, offset); offset += 4;
+        entry.Unknown2.copy(newBuffer, offset, 0, entry.Unknown2.byteLength); offset += entry.Unknown2.byteLength;
+        const stringBuffer = new Buffer(entry.Name + '\0');
+        stringBuffer.copy(newBuffer, offset, 0, stringBuffer.byteLength); offset += stringBuffer.byteLength;
+        offset = Align(offset, 4);
+      }
+    }
+    if (this.Vers === 2) { offset += 2; }
+    if (offset !== this.DataOffsetByData) { console.log('包装的文件头 + 索引长度错误'); return new Buffer(0); }
+    // 主体
+    newFilesBuffer.copy(newBuffer, offset, 0, newFilesBuffer.byteLength);
+    return newBuffer;
+  }
   private parseTocEntry(br: BufferReader) {
     const entry = new ALAR.Entry();
     if (this.Vers === 2) {
@@ -347,7 +542,7 @@ export namespace ALAR {
     Unknown2 = Buffer.alloc(0);
     Name = '';
     Unknown3 = 0;
-    Content: AL | undefined;
+    Content: AL = new DefaultAL(new Buffer(0));
     ParsedContent = new Object();
   }
 }
@@ -436,6 +631,9 @@ export class ALTX implements AL {
       this.Height = br.ReadWord();
       this.FakeImage = br.ReadString(0x100);
     }
+  }
+  Package() {
+    return this.Buffer;
   }
 }
 
@@ -567,6 +765,9 @@ export class ALIG implements AL {
     }
     this.Image = Buffer.from(rawImage);
   }
+  Package() {
+    return this.Buffer;
+  }
 }
 
 export namespace ALIG {
@@ -682,6 +883,9 @@ export class ALOD implements AL {
         this.ALMT = new ALMT(this.Buffer.slice(this.ALMTOffset));
       }
     }
+  }
+  Package() {
+    return this.Buffer;
   }
 }
 
@@ -809,6 +1013,9 @@ export class ALMT implements AL {
       });
     }
   }
+  Package() {
+    return this.Buffer;
+  }
   private parseField(name: string, br: BufferReader): any {
     switch (name) {
       case 'PatternNo':
@@ -844,6 +1051,7 @@ export class ALMT implements AL {
         return;
     }
   }
+
 }
 
 function parseObject(buffer: Buffer) {
