@@ -24,6 +24,9 @@ class AL {
             return fs.readFileSync(path);
         }
     }
+    Save(path) {
+        const a = path;
+    }
 }
 exports.AL = AL;
 class DefaultAL extends AL {
@@ -32,8 +35,18 @@ class DefaultAL extends AL {
     }
 }
 exports.DefaultAL = DefaultAL;
-class ALLZ {
+class Text extends AL {
     constructor(buffer) {
+        super(buffer);
+    }
+    Save(path) {
+        fs.writeFileSync(path, this.Buffer);
+    }
+}
+exports.Text = Text;
+class ALLZ extends AL {
+    constructor(buffer) {
+        super(buffer);
         const self = this;
         this.Buffer = buffer;
         const br = new BufferReader_1.BufferReader(buffer);
@@ -243,6 +256,20 @@ class ALTB extends AL {
             this.Name = br.ReadString(this.NameLength);
         }
     }
+    Save(path) {
+        if (this.StringField === undefined) {
+            return;
+        }
+        path = path.replace('.atb', '.txt');
+        const ws = fs.createWriteStream(path);
+        for (const key in this.StringField) {
+            if (this.StringField.hasOwnProperty(key)) {
+                const s = this.StringField[key].replace('\n', '\\n');
+                ws.write(s + '\n');
+            }
+        }
+        ws.close();
+    }
     Package(path) {
         path = path.replace('.atb', '.txt');
         if (!fs.existsSync(path)) {
@@ -386,7 +413,7 @@ class ALAR extends AL {
                 entry.Content = parseObject(buffer.slice(entry.Address, entry.Address + entry.Size));
             }
             else {
-                entry.Content = new DefaultAL(buffer.slice(entry.Address, entry.Address + entry.Size));
+                entry.Content = new Text(buffer.slice(entry.Address, entry.Address + entry.Size));
             }
             this.Files.push(entry);
         }
@@ -395,6 +422,13 @@ class ALAR extends AL {
         }
         if (this.Vers === 3) {
             this.DataOffsetByData = this.Files[0].Address;
+        }
+    }
+    Save(path) {
+        path = path.replace('.aar', '');
+        fs.mkdirSync(path);
+        for (const entry of this.Files) {
+            entry.Content.Save(pathLib.join(path, entry.Name));
         }
     }
     Package(path) {

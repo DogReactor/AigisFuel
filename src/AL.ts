@@ -24,6 +24,9 @@ export class AL {
     }
   }
 
+  public Save(path: string) {
+    const a = path;
+  }
 }
 
 export class DefaultAL extends AL {
@@ -31,10 +34,16 @@ export class DefaultAL extends AL {
     super(buffer);
   }
 }
+export class Text extends AL {
+  constructor(buffer: Buffer) {
+    super(buffer);
+  }
+  public Save(path: string) {
+    fs.writeFileSync(path, this.Buffer);
+  }
+}
 
-export class ALLZ implements AL {
-  Buffer: Buffer;
-  Head: string;
+export class ALLZ extends AL {
   Vers: number;
   MinBitsLength: number;
   MinBitsOffset: number;
@@ -43,6 +52,7 @@ export class ALLZ implements AL {
   Dst: Buffer;
   Size: 0;
   constructor(buffer: Buffer) {
+    super(buffer);
     const self = this;
     this.Buffer = buffer;
     const br = new BufferReader(buffer);
@@ -273,6 +283,19 @@ export class ALTB extends AL {
       this.Name = br.ReadString(this.NameLength);
     }
   }
+  Save(path: string) {
+    if (this.StringField === undefined) { return; }
+    path = path.replace('.atb', '.txt');
+    const ws = fs.createWriteStream(path);
+
+    for (const key in this.StringField) {
+      if (this.StringField.hasOwnProperty(key)) {
+        const s = this.StringField[key].replace('\n', '\\n');
+        ws.write(s + '\n');
+      }
+    }
+    ws.close();
+  }
   Package(path: string) {
     path = path.replace('.atb', '.txt');
     if (!fs.existsSync(path)) {
@@ -409,7 +432,7 @@ export class ALAR extends AL {
           buffer.slice(entry.Address, entry.Address + entry.Size),
         );
       } else {
-        entry.Content = new DefaultAL(
+        entry.Content = new Text(
           buffer.slice(entry.Address, entry.Address + entry.Size),
         );
       }
@@ -421,6 +444,13 @@ export class ALAR extends AL {
     }
     if (this.Vers === 3) {
       this.DataOffsetByData = this.Files[0].Address;
+    }
+  }
+  public Save(path: string) {
+    path = path.replace('.aar', '');
+    fs.mkdirSync(path);
+    for (const entry of this.Files) {
+      entry.Content.Save(pathLib.join(path, entry.Name));
     }
   }
   public Package(path: string) {

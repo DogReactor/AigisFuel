@@ -5,13 +5,16 @@ export declare class AL {
     [k: string]: any;
     constructor(buffer: Buffer);
     Package(path: string): Buffer;
+    Save(path: string): void;
 }
 export declare class DefaultAL extends AL {
     constructor(buffer: Buffer);
 }
-export declare class ALLZ implements AL {
-    Buffer: Buffer;
-    Head: string;
+export declare class Text extends AL {
+    constructor(buffer: Buffer);
+    Save(path: string): void;
+}
+export declare class ALLZ extends AL {
     Vers: number;
     MinBitsLength: number;
     MinBitsOffset: number;
@@ -62,6 +65,7 @@ export declare class ALTB extends AL {
     Headers: ALRD.Header[];
     Contents: any[];
     constructor(buffer: Buffer);
+    Save(path: string): void;
     Package(path: string): Buffer;
     private readReplacementFile(text);
     private ReplaceStringList(replaceObject);
@@ -78,6 +82,7 @@ export declare class ALAR extends AL {
     UnknownBytes: Buffer;
     DataOffset: number;
     constructor(buffer: Buffer);
+    Save(path: string): void;
     Package(path: string): Buffer;
     private parseTocEntry(br);
 }
