@@ -284,17 +284,18 @@ export class ALTB extends AL {
     }
   }
   Save(path: string) {
-    if (this.StringField === undefined) { return; }
+    if (this.StringField === undefined) {
+      return;
+    }
     path = path.replace('.atb', '.txt');
-    const ws = fs.createWriteStream(path);
-
+    let result = '';
     for (const key in this.StringField) {
       if (this.StringField.hasOwnProperty(key)) {
         const s = this.StringField[key].replace('\n', '\\n');
-        ws.write(s + '\n');
+        result += s + '\r\n';
       }
     }
-    ws.close();
+    fs.writeFileSync(path, result, 'utf8');
   }
   Package(path: string) {
     path = path.replace('.atb', '.txt');
@@ -448,7 +449,7 @@ export class ALAR extends AL {
   }
   public Save(path: string) {
     path = path.replace('.aar', '');
-    fs.mkdirSync(path);
+    if (fs.existsSync(path)) { fs.mkdirSync(path) };
     for (const entry of this.Files) {
       entry.Content.Save(pathLib.join(path, entry.Name));
     }

@@ -261,14 +261,14 @@ class ALTB extends AL {
             return;
         }
         path = path.replace('.atb', '.txt');
-        const ws = fs.createWriteStream(path);
+        let result = '';
         for (const key in this.StringField) {
             if (this.StringField.hasOwnProperty(key)) {
                 const s = this.StringField[key].replace('\n', '\\n');
-                ws.write(s + '\n');
+                result += s + '\r\n';
             }
         }
-        ws.close();
+        fs.writeFileSync(path, result, 'utf8');
     }
     Package(path) {
         path = path.replace('.atb', '.txt');
@@ -426,7 +426,10 @@ class ALAR extends AL {
     }
     Save(path) {
         path = path.replace('.aar', '');
-        fs.mkdirSync(path);
+        if (fs.existsSync(path)) {
+            fs.mkdirSync(path);
+        }
+        ;
         for (const entry of this.Files) {
             entry.Content.Save(pathLib.join(path, entry.Name));
         }
