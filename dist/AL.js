@@ -20,6 +20,7 @@ class AL {
             return this.Buffer;
         }
         else {
+            console.log('found ' + path);
             return fs.readFileSync(path);
         }
     }
@@ -252,7 +253,7 @@ class ALTB extends AL {
             return this.Buffer;
         }
         ;
-        const newStringField = this.GetStringField(this.ReplaceStringList(replaceObject));
+        const newStringField = this.ReplaceStringList(replaceObject);
         const newOffsetList = newStringField.offsetList;
         // 制作Offset变化Object
         const offsetChanges = {};
@@ -310,16 +311,17 @@ class ALTB extends AL {
                 obj[col[0]] = col[1];
             }
         }
-        console.log('Read Row', count);
         return obj;
     }
     ReplaceStringList(replaceObject) {
-        const ss = [];
         if (this.StringField === undefined) {
-            return null;
+            throw '该文件没有StringField';
         }
         ;
         let count = 0;
+        const bufferList = [];
+        const offsetList = [];
+        let offset = 0;
         for (const key in this.StringField) {
             if (this.StringField.hasOwnProperty(key)) {
                 let s = this.StringField[key];
@@ -329,27 +331,14 @@ class ALTB extends AL {
                     s = replaceS;
                     count++;
                 }
-                ss.push(s);
+                offsetList.push(offset);
+                s = s.replace(/\\n/g, '\n') + '\0';
+                const stringBuffer = Buffer.from(s, 'utf-8');
+                bufferList.push(stringBuffer);
+                offset += stringBuffer.length;
             }
         }
-        console.log('Replaced' + count);
-        return ss;
-    }
-    GetStringField(stringList) {
-        if (stringList === null) {
-            throw '该文件没有StringField';
-        }
-        ;
-        const bufferList = [];
-        const offsetList = [];
-        let offset = 0;
-        for (const i of stringList) {
-            offsetList.push(offset);
-            const s = i.replace(/\\n/g, '\n') + '\0';
-            const stringBuffer = Buffer.from(s, 'utf-8');
-            bufferList.push(stringBuffer);
-            offset += stringBuffer.length;
-        }
+        console.log('Replaced ' + count);
         return {
             offsetList,
             buffer: Buffer.concat(bufferList),

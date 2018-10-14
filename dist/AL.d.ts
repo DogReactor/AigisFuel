@@ -65,7 +65,6 @@ export declare class ALTB extends AL {
     Package(path: string): Buffer;
     private readReplacementFile(text);
     private ReplaceStringList(replaceObject);
-    private GetStringField(stringList);
 }
 export declare class ALAR extends AL {
     Files: ALAR.Entry[];
