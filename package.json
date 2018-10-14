@@ -1,6 +1,6 @@
 {
   "name": "aigis-fuel",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Fuel!",
   "main": "./dist/AL.js",
   "types": "./dist/AL.d.ts",
