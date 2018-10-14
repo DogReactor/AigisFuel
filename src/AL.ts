@@ -16,8 +16,11 @@ export class AL {
     this.Head = buffer.toString('utf-8', 0, 4);
   }
   public Package(path: string): Buffer {
-    const p = path;
-    return this.Buffer;
+    if (!fs.existsSync(path)) {
+      return this.Buffer;
+    } else {
+      return fs.readFileSync(path);
+    }
   }
 
 }
@@ -25,9 +28,6 @@ export class AL {
 export class DefaultAL extends AL {
   constructor(buffer: Buffer) {
     super(buffer);
-  }
-  Package() {
-    return this.Buffer;
   }
 }
 

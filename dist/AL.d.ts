@@ -8,7 +8,6 @@ export declare class AL {
 }
 export declare class DefaultAL extends AL {
     constructor(buffer: Buffer);
-    Package(): Buffer;
 }
 export declare class ALLZ implements AL {
     Buffer: Buffer;
