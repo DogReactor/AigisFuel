@@ -151,7 +151,7 @@ export class ALLZ implements AL {
   }
 }
 
-export class ALRD {
+export class ALRD implements AL {
   Head: string;
   Vers: number;
   Count: number;
@@ -183,6 +183,9 @@ export class ALRD {
       br.Align(4);
       this.Headers.push(header);
     }
+  }
+  Package() {
+    return this.Buffer;
   }
 }
 export namespace ALRD {
@@ -1150,6 +1153,9 @@ function parseObject(buffer: Buffer) {
       break;
     case 'ALOD':
       r = new ALOD(buffer);
+      break;
+    case 'ALRD':
+      r = new ALRD(buffer);
       break;
     default:
       console.log(`Not Support type ${type}`);

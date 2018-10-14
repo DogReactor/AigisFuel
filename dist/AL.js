@@ -159,6 +159,9 @@ class ALRD {
             this.Headers.push(header);
         }
     }
+    Package() {
+        return this.Buffer;
+    }
 }
 exports.ALRD = ALRD;
 (function (ALRD) {
@@ -998,6 +1001,9 @@ function parseObject(buffer) {
             break;
         case 'ALOD':
             r = new ALOD(buffer);
+            break;
+        case 'ALRD':
+            r = new ALRD(buffer);
             break;
         default:
             console.log(`Not Support type ${type}`);
