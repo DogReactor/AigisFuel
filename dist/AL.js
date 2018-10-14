@@ -393,7 +393,12 @@ class ALAR extends AL {
         br.Align(4);
         for (let i = 0; i < this.Count; i++) {
             const entry = this.parseTocEntry(br);
-            entry.Content = parseObject(buffer.slice(entry.Address, entry.Address + entry.Size));
+            if (pathLib.extname(entry.Name)[1] === 'a') {
+                entry.Content = parseObject(buffer.slice(entry.Address, entry.Address + entry.Size));
+            }
+            else {
+                entry.Content = new DefaultAL(buffer.slice(entry.Address, entry.Address + entry.Size));
+            }
             this.Files.push(entry);
         }
         if (this.Vers === 2) {
