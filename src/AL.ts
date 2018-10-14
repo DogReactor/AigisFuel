@@ -449,7 +449,7 @@ export class ALAR extends AL {
   }
   public Save(path: string) {
     path = path.replace('.aar', '');
-    if (fs.existsSync(path)) { fs.mkdirSync(path) };
+    if (!fs.existsSync(path)) { fs.mkdirSync(path) };
     for (const entry of this.Files) {
       entry.Content.Save(pathLib.join(path, entry.Name));
     }

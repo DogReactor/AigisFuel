@@ -426,7 +426,7 @@ class ALAR extends AL {
     }
     Save(path) {
         path = path.replace('.aar', '');
-        if (fs.existsSync(path)) {
+        if (!fs.existsSync(path)) {
             fs.mkdirSync(path);
         }
         ;
