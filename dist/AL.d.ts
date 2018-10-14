@@ -1,13 +1,21 @@
 /// <reference types="node" />
-export interface AL {
+export declare class AL {
     Buffer: Buffer;
     Head: string;
     [k: string]: any;
-}
-export declare class DefaultAL implements AL {
-    Buffer: Buffer;
-    Head: string;
     constructor(buffer: Buffer);
+    Package(path: string): Buffer;
+}
+export declare class DefaultAL extends AL {
+    constructor(buffer: Buffer);
+    Package(): Buffer;
+}
+export declare class TEXT implements AL {
+    Head: string;
+    Buffer: Buffer;
+    Content: string;
+    constructor(buffer: Buffer);
+    Package(): Buffer;
 }
 export declare class ALLZ implements AL {
     Buffer: Buffer;
@@ -39,9 +47,7 @@ export declare namespace ALRD {
         NameJP: string;
     }
 }
-export declare class ALTB implements AL {
-    Buffer: Buffer;
-    Head: string;
+export declare class ALTB extends AL {
     Vers: number;
     Form: number;
     Count: number;
@@ -53,9 +59,9 @@ export declare class ALTB implements AL {
     NameLength?: number;
     Name?: string;
     Size: number;
-    StringFieldSizePosition?: number;
-    StringFieldSize?: number;
-    StringFieldEntry?: number;
+    StringFieldSizePosition: number;
+    StringFieldSize: number;
+    StringFieldEntry: number;
     Label?: string;
     StringField: {
         [k: string]: any;
@@ -64,21 +70,24 @@ export declare class ALTB implements AL {
     Headers: ALRD.Header[];
     Contents: any[];
     constructor(buffer: Buffer);
+    Package(path: string): Buffer;
+    private readReplacementFile(text);
+    private ReplaceStringList(replaceObject);
+    private GetStringField(stringList);
 }
-export declare class ALAR implements AL {
-    Buffer: Buffer;
-    Head: string;
+export declare class ALAR extends AL {
     Files: ALAR.Entry[];
     TocOffsetList: any[];
     Vers: number;
     Unknown: number;
     Count: number;
-    Unknown1?: number;
-    Unknown2?: number;
+    DataOffsetByData: number;
+    Unknown1: number;
+    Unknown2: number;
     UnknownBytes: Buffer;
-    DataOffset?: number;
-    DataOffsetByData?: number;
+    DataOffset: number;
     constructor(buffer: Buffer);
+    Package(path: string): Buffer;
     private parseTocEntry(br);
 }
 export declare namespace ALAR {
@@ -91,7 +100,7 @@ export declare namespace ALAR {
         Unknown2: Buffer;
         Name: string;
         Unknown3: number;
-        Content: AL | string | undefined;
+        Content: AL;
         ParsedContent: Object;
     }
 }
@@ -108,9 +117,7 @@ export declare namespace ALTX {
         name?: string;
     }
 }
-export declare class ALTX implements AL {
-    Buffer: Buffer;
-    Head: string;
+export declare class ALTX extends AL {
     Vers: number;
     Form: number;
     Count: number;
@@ -125,9 +132,7 @@ export declare class ALTX implements AL {
     Unknown2?: number;
     constructor(buffer: Buffer);
 }
-export declare class ALIG implements AL {
-    Buffer: Buffer;
-    Head: string;
+export declare class ALIG extends AL {
     Vers: number;
     Form: string;
     PaletteForm: string;
@@ -153,9 +158,7 @@ export declare namespace ALIG {
         extract(length: number): number;
     }
 }
-export declare class ALOD implements AL {
-    Buffer: Buffer;
-    Head: string;
+export declare class ALOD extends AL {
     Vers: number;
     Form: number;
     Fields: string[];
@@ -179,9 +182,7 @@ export declare namespace ALMT {
         Name: string;
     }
 }
-export declare class ALMT implements AL {
-    Buffer: Buffer;
-    Head: string;
+export declare class ALMT extends AL {
     Vers: number;
     Unknown1: number;
     EntryCount: number;

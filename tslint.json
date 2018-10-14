@@ -21,6 +21,7 @@
     "no-namespace": false,
     "member-access": false,
     "no-this-assignment": false,
-    "no-implicit-dependencies": [true, ["sharp"]]
+    "no-implicit-dependencies": [true, ["sharp"]],
+    "no-string-throw":false
   }
 }
