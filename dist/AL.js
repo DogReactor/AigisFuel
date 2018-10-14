@@ -248,7 +248,15 @@ class ALAR {
         br.Align(4);
         for (let i = 0; i < this.Count; i++) {
             const entry = this.parseTocEntry(br);
-            entry.Content = parseObject(buffer.slice(entry.Address, entry.Address + entry.Size));
+            const [_, ext] = entry.Name.split('.');
+            if (ext === 'txt') {
+                entry.Content = buffer
+                    .slice(entry.Address, entry.Address + entry.Size)
+                    .toString('utf-8');
+            }
+            else {
+                entry.Content = parseObject(buffer.slice(entry.Address, entry.Address + entry.Size));
+            }
             this.Files.push(entry);
         }
         if (this.Vers === 2) {

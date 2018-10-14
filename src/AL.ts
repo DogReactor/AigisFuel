@@ -299,9 +299,16 @@ export class ALAR implements AL {
     br.Align(4);
     for (let i = 0; i < this.Count; i++) {
       const entry = this.parseTocEntry(br);
-      entry.Content = parseObject(
-        buffer.slice(entry.Address, entry.Address + entry.Size),
-      );
+      const [_, ext] = entry.Name.split('.');
+      if (ext === 'txt') {
+        entry.Content = buffer
+          .slice(entry.Address, entry.Address + entry.Size)
+          .toString('utf-8');
+      } else {
+        entry.Content = parseObject(
+          buffer.slice(entry.Address, entry.Address + entry.Size),
+        );
+      }
       this.Files.push(entry);
     }
     if (this.Vers === 2) {
@@ -347,7 +354,7 @@ export namespace ALAR {
     Unknown2 = Buffer.alloc(0);
     Name = '';
     Unknown3 = 0;
-    Content: AL | undefined;
+    Content: AL | string | undefined;
     ParsedContent = new Object();
   }
 }

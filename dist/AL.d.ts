@@ -79,7 +79,7 @@ export declare class ALAR implements AL {
     DataOffset?: number;
     DataOffsetByData?: number;
     constructor(buffer: Buffer);
-    private parseTocEntry;
+    private parseTocEntry(br);
 }
 export declare namespace ALAR {
     class Entry {
@@ -91,7 +91,7 @@ export declare namespace ALAR {
         Unknown2: Buffer;
         Name: string;
         Unknown3: number;
-        Content: AL | undefined;
+        Content: AL | string | undefined;
         ParsedContent: Object;
     }
 }
@@ -198,6 +198,6 @@ export declare class ALMT implements AL {
     Unknown4: number;
     EntryOffset?: number;
     constructor(buffer: Buffer);
-    private parseField;
+    private parseField(name, br);
 }
 export declare function parseAL(buffer: Buffer): AL;

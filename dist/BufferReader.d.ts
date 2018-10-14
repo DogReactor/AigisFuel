@@ -2,7 +2,7 @@
 export declare enum Origin {
     Begin = 0,
     End = 1,
-    Current = 2
+    Current = 2,
 }
 export declare class BufferReader {
     readonly Position: number;
@@ -27,5 +27,5 @@ export declare class BufferReader {
     Seek(length: number, seekOrigin: Origin): void;
     Copy(target: Buffer, targetStart: number, length: number): void;
     Overflow(): boolean;
-    private ensure;
+    private ensure(count);
 }
