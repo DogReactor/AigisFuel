@@ -291,7 +291,7 @@ export class ALTB extends AL {
     let result = '';
     for (const key in this.StringField) {
       if (this.StringField.hasOwnProperty(key)) {
-        const s = this.StringField[key].replace('\n', '\\n');
+        const s = this.StringField[key].replace(/\n/g, '\\n');
         result += s + '\r\n';
       }
     }
