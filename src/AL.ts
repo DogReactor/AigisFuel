@@ -18,8 +18,16 @@ export class AL {
     this.Head = buffer.toString('utf-8', 0, 4);
   }
   public Package(path: string): Buffer {
-    const p = path;
-    return this.Buffer;
+    if (!fs.existsSync(path)) {
+      return this.Buffer;
+    } else {
+      console.log('found ' + path);
+      return fs.readFileSync(path);
+    }
+  }
+
+  public Save(path: string) {
+    const a = path;
   }
 }
 
@@ -27,27 +35,19 @@ export class DefaultAL extends AL {
   constructor(buffer: Buffer) {
     super(buffer);
   }
-  Package() {
-    return this.Buffer;
-  }
 }
-
-export class TEXT implements AL {
-  Head = 'TEXT';
-  Buffer: Buffer;
-  Content: string;
+export class Text extends AL {
+  Content: string = '';
   constructor(buffer: Buffer) {
-    this.Buffer = buffer;
+    super(buffer);
     this.Content = buffer.toString('utf-8');
   }
-  Package() {
-    return this.Buffer;
+  public Save(path: string) {
+    fs.writeFileSync(path, this.Buffer);
   }
 }
 
-export class ALLZ implements AL {
-  Buffer: Buffer;
-  Head: string;
+export class ALLZ extends AL {
   Vers: number;
   MinBitsLength: number;
   MinBitsOffset: number;
@@ -56,6 +56,7 @@ export class ALLZ implements AL {
   Dst: Buffer;
   Size: 0;
   constructor(buffer: Buffer) {
+    super(buffer);
     const self = this;
     this.Buffer = buffer;
     const br = new BufferReader(buffer);
@@ -151,7 +152,7 @@ export class ALLZ implements AL {
   }
 }
 
-export class ALRD implements AL {
+export class ALRD extends AL {
   Head: string;
   Vers: number;
   Count: number;
@@ -159,6 +160,7 @@ export class ALRD implements AL {
   Headers: ALRD.Header[];
   Buffer: Buffer;
   constructor(buffer: Buffer) {
+    super(buffer);
     this.Buffer = buffer;
     const br = new BufferReader(buffer);
     this.Head = br.ReadString(4);
@@ -183,9 +185,6 @@ export class ALRD implements AL {
       br.Align(4);
       this.Headers.push(header);
     }
-  }
-  Package() {
-    return this.Buffer;
   }
 }
 export namespace ALRD {
@@ -289,20 +288,28 @@ export class ALTB extends AL {
       this.Name = br.ReadString(this.NameLength);
     }
   }
+  Save(path: string) {
+    if (this.StringField === undefined) {
+      return;
+    }
+    path = path.replace('.atb', '.txt');
+    let result = '';
+    for (const key in this.StringField) {
+      if (this.StringField.hasOwnProperty(key)) {
+        const s = this.StringField[key].replace(/\n/g, '\\n');
+        result += s + '\r\n';
+      }
+    }
+    fs.writeFileSync(path, result, 'utf8');
+  }
   Package(path: string) {
     path = path.replace('.atb', '.txt');
     if (!fs.existsSync(path)) {
       return this.Buffer;
     }
-    const replaceObject = this.readReplacementFile(
-      fs.readFileSync(path, { encoding: 'utf-8' }),
-    );
-    if (replaceObject === null) {
-      return this.Buffer;
-    }
-    const newStringField = this.GetStringField(
-      this.ReplaceStringList(replaceObject),
-    );
+    const replaceObject = this.readReplacementFile(fs.readFileSync(path, { encoding: 'utf-8' }));
+    if (replaceObject === null) { return this.Buffer };
+    const newStringField = this.ReplaceStringList(replaceObject);
     const newOffsetList = newStringField.offsetList;
     // 制作Offset变化Object
     const offsetChanges: any = {};
@@ -368,15 +375,14 @@ export class ALTB extends AL {
         obj[col[0]] = col[1];
       }
     }
-    console.log('Read Row', count);
     return obj;
   }
   private ReplaceStringList(replaceObject: any) {
-    const ss = [];
-    if (this.StringField === undefined) {
-      return null;
-    }
+    if (this.StringField === undefined) { throw '该文件没有StringField' };
     let count = 0;
+    const bufferList = [];
+    const offsetList = [];
+    let offset = 0;
     for (const key in this.StringField) {
       if (this.StringField.hasOwnProperty(key)) {
         let s = this.StringField[key];
@@ -386,26 +392,14 @@ export class ALTB extends AL {
           s = replaceS;
           count++;
         }
-        ss.push(s);
+        offsetList.push(offset);
+        s = s.replace(/\\n/g, '\n') + '\0';
+        const stringBuffer = Buffer.from(s, 'utf-8');
+        bufferList.push(stringBuffer);
+        offset += stringBuffer.length;
       }
     }
-    console.log('Replaced' + count);
-    return ss;
-  }
-  private GetStringField(stringList: string[] | null) {
-    if (stringList === null) {
-      throw '该文件没有StringField';
-    }
-    const bufferList = [];
-    const offsetList = [];
-    let offset = 0;
-    for (const i of stringList) {
-      offsetList.push(offset);
-      const s = i.replace(/\\n/g, '\n') + '\0';
-      const stringBuffer = Buffer.from(s, 'utf-8');
-      bufferList.push(stringBuffer);
-      offset += stringBuffer.length;
-    }
+    console.log('Replaced ' + count);
     return {
       offsetList,
       buffer: Buffer.concat(bufferList),
@@ -452,16 +446,16 @@ export class ALAR extends AL {
     br.Align(4);
     for (let i = 0; i < this.Count; i++) {
       const entry = this.parseTocEntry(br);
-      const [_, ext] = entry.Name.split('.');
-      if (ext === 'txt') {
-        entry.Content = new TEXT(
-          buffer.slice(entry.Address, entry.Address + entry.Size),
-        );
-      } else {
+      if (pathLib.extname(entry.Name)[1] === 'a') {
         entry.Content = parseObject(
           buffer.slice(entry.Address, entry.Address + entry.Size),
         );
+      } else {
+        entry.Content = new Text(
+          buffer.slice(entry.Address, entry.Address + entry.Size),
+        );
       }
+
       this.Files.push(entry);
     }
     if (this.Vers === 2) {
@@ -469,6 +463,13 @@ export class ALAR extends AL {
     }
     if (this.Vers === 3) {
       this.DataOffsetByData = this.Files[0].Address;
+    }
+  }
+  public Save(path: string) {
+    path = path.replace('.aar', '');
+    if (!fs.existsSync(path)) { fs.mkdirSync(path) };
+    for (const entry of this.Files) {
+      entry.Content.Save(pathLib.join(path, entry.Name));
     }
   }
   public Package(path: string) {
