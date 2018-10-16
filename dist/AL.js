@@ -416,8 +416,11 @@ class ALAR extends AL {
             if (pathLib.extname(entry.Name)[1] === 'a') {
                 entry.Content = parseObject(buffer.slice(entry.Address, entry.Address + entry.Size));
             }
-            else {
+            else if (pathLib.extname(entry.Name) === '.txt') {
                 entry.Content = new Text(buffer.slice(entry.Address, entry.Address + entry.Size));
+            }
+            else {
+                entry.Content = new DefaultAL(buffer.slice(entry.Address, entry.Address + entry.Size));
             }
             this.Files.push(entry);
         }
