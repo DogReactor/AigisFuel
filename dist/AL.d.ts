@@ -5,21 +5,17 @@ export declare class AL {
     [k: string]: any;
     constructor(buffer: Buffer);
     Package(path: string): Buffer;
+    Save(path: string): void;
 }
 export declare class DefaultAL extends AL {
     constructor(buffer: Buffer);
-    Package(): Buffer;
 }
-export declare class TEXT implements AL {
-    Head: string;
-    Buffer: Buffer;
+export declare class Text extends AL {
     Content: string;
     constructor(buffer: Buffer);
-    Package(): Buffer;
+    Save(path: string): void;
 }
-export declare class ALLZ implements AL {
-    Buffer: Buffer;
-    Head: string;
+export declare class ALLZ extends AL {
     Vers: number;
     MinBitsLength: number;
     MinBitsOffset: number;
@@ -30,7 +26,7 @@ export declare class ALLZ implements AL {
     constructor(buffer: Buffer);
     Package(): Buffer;
 }
-export declare class ALRD implements AL {
+export declare class ALRD extends AL {
     Head: string;
     Vers: number;
     Count: number;
@@ -38,7 +34,6 @@ export declare class ALRD implements AL {
     Headers: ALRD.Header[];
     Buffer: Buffer;
     constructor(buffer: Buffer);
-    Package(): Buffer;
 }
 export declare namespace ALRD {
     class Header {
@@ -71,10 +66,10 @@ export declare class ALTB extends AL {
     Headers: ALRD.Header[];
     Contents: any[];
     constructor(buffer: Buffer);
+    Save(path: string): void;
     Package(path: string): Buffer;
     private readReplacementFile(text);
     private ReplaceStringList(replaceObject);
-    private GetStringField(stringList);
 }
 export declare class ALAR extends AL {
     Files: ALAR.Entry[];
@@ -88,6 +83,7 @@ export declare class ALAR extends AL {
     UnknownBytes: Buffer;
     DataOffset: number;
     constructor(buffer: Buffer);
+    Save(path: string): void;
     Package(path: string): Buffer;
     private parseTocEntry(br);
 }
