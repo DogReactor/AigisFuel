@@ -1,10 +1,12 @@
 import { BufferReader, Origin } from './BufferReader';
 import * as fs from 'fs';
-import * as pathLib from 'path'
+import * as pathLib from 'path';
 
 function Align(offset: number, length: number) {
-  if (offset % length === 0) { return offset };
-  return offset + (length - offset % length);
+  if (offset % length === 0) {
+    return offset;
+  }
+  return offset + (length - (offset % length));
 }
 
 export class AL {
@@ -150,7 +152,7 @@ export class ALLZ extends AL {
   }
 }
 
-export class ALRD {
+export class ALRD extends AL {
   Head: string;
   Vers: number;
   Count: number;
@@ -158,6 +160,7 @@ export class ALRD {
   Headers: ALRD.Header[];
   Buffer: Buffer;
   constructor(buffer: Buffer) {
+    super(buffer);
     this.Buffer = buffer;
     const br = new BufferReader(buffer);
     this.Head = br.ReadString(4);
@@ -310,7 +313,9 @@ export class ALTB extends AL {
     const newOffsetList = newStringField.offsetList;
     // 制作Offset变化Object
     const offsetChanges: any = {};
-    if (this.StringOffsetList.length !== newOffsetList.length) { throw 'String数量错误' };
+    if (this.StringOffsetList.length !== newOffsetList.length) {
+      throw 'String数量错误';
+    }
     for (let i = 0; i < newOffsetList.length; i++) {
       offsetChanges[this.StringOffsetList[i]] = newOffsetList[i];
     }
@@ -318,7 +323,10 @@ export class ALTB extends AL {
     let size = 0;
     const head = this.Buffer.slice(0, this.StringFieldEntry);
     const stringField = newStringField.buffer;
-    const tail = this.Buffer.slice(Align(this.StringFieldEntry + this.StringFieldSize, 4), this.Buffer.length);
+    const tail = this.Buffer.slice(
+      Align(this.StringFieldEntry + this.StringFieldSize, 4),
+      this.Buffer.length,
+    );
     const alignStringFieldLength = Align(stringField.length, 4);
     size = head.length + alignStringFieldLength;
     size += tail.length;
@@ -333,12 +341,20 @@ export class ALTB extends AL {
           const newStringFieldOffset = offsetChanges[stringFieldOffset];
           if (newStringFieldOffset !== undefined) {
             head.writeUInt32LE(newStringFieldOffset, offset);
-          } else { throw '没有该offset'; }
+          } else {
+            throw '没有该offset';
+          }
         }
       }
     }
-    if (this.NameStartAddress !== undefined && this.NameStartAddressOffset !== undefined) {
-      const newNameStart = this.NameStartAddress + (alignStringFieldLength - (this.NameStartAddress - this.StringFieldEntry))
+    if (
+      this.NameStartAddress !== undefined &&
+      this.NameStartAddressOffset !== undefined
+    ) {
+      const newNameStart =
+        this.NameStartAddress +
+        (alignStringFieldLength -
+          (this.NameStartAddress - this.StringFieldEntry));
       head.writeUInt32LE(newNameStart, this.NameStartAddressOffset);
     }
 
@@ -349,7 +365,7 @@ export class ALTB extends AL {
     return newBuffer;
   }
   private readReplacementFile(text: string) {
-    const obj: any = {}
+    const obj: any = {};
     const row = text.split('\r\n');
     let count = 0;
     for (const i of row) {
@@ -387,7 +403,7 @@ export class ALTB extends AL {
     return {
       offsetList,
       buffer: Buffer.concat(bufferList),
-    }
+    };
   }
 }
 
@@ -479,35 +495,65 @@ export class ALAR extends AL {
       }
       entry.Address = offset;
       entry.Size = content.byteLength;
-      newFilesBufferArray.push(content); offset += content.byteLength;
+      newFilesBufferArray.push(content);
+      offset += content.byteLength;
       if (i === this.Files.length - 1) {
         continue;
       }
       const newOffset = Align(offset, 4);
-      newFilesBufferArray.push(Buffer.alloc(newOffset - offset)); offset = newOffset;
-      if (this.Vers === 2) { newFilesBufferArray.push(Buffer.alloc(2)); offset += 2; }
+      newFilesBufferArray.push(Buffer.alloc(newOffset - offset));
+      offset = newOffset;
+      if (this.Vers === 2) {
+        newFilesBufferArray.push(Buffer.alloc(2));
+        offset += 2;
+      }
     }
     const newFilesBuffer = Buffer.concat(newFilesBufferArray);
-    console.log(offset, newFilesBuffer.byteLength + this.DataOffsetByData, this.Buffer.byteLength);
+    console.log(
+      offset,
+      newFilesBuffer.byteLength + this.DataOffsetByData,
+      this.Buffer.byteLength,
+    );
     // 总长度实际上就是offset了
     const newBuffer = Buffer.alloc(offset);
     offset = 0;
     // 头
-    newBuffer.write('ALAR', 0); offset += 4;
-    newBuffer.writeInt8(this.Vers, offset); offset++;
-    newBuffer.writeInt8(this.Unknown, offset); offset++;
+    newBuffer.write('ALAR', 0);
+    offset += 4;
+    newBuffer.writeInt8(this.Vers, offset);
+    offset++;
+    newBuffer.writeInt8(this.Unknown, offset);
+    offset++;
     if (this.Vers === 2) {
-      newBuffer.writeUInt16LE(this.Count, offset); offset += 2;
-      this.UnknownBytes.copy(newBuffer, offset, 0, this.UnknownBytes.byteLength); offset += this.UnknownBytes.byteLength;
+      newBuffer.writeUInt16LE(this.Count, offset);
+      offset += 2;
+      this.UnknownBytes.copy(
+        newBuffer,
+        offset,
+        0,
+        this.UnknownBytes.byteLength,
+      );
+      offset += this.UnknownBytes.byteLength;
     }
     if (this.Vers === 3) {
-      newBuffer.writeUInt16LE(this.Count, offset); offset += 2;
-      newBuffer.writeUInt16LE(this.Unknown1, offset); offset += 2;
-      newBuffer.writeUInt16LE(this.Unknown2, offset); offset += 2;
-      this.UnknownBytes.copy(newBuffer, offset, 0, this.UnknownBytes.byteLength); offset += this.UnknownBytes.byteLength;
-      newBuffer.writeUInt16LE(this.DataOffset, offset); offset += 2;
+      newBuffer.writeUInt16LE(this.Count, offset);
+      offset += 2;
+      newBuffer.writeUInt16LE(this.Unknown1, offset);
+      offset += 2;
+      newBuffer.writeUInt16LE(this.Unknown2, offset);
+      offset += 2;
+      this.UnknownBytes.copy(
+        newBuffer,
+        offset,
+        0,
+        this.UnknownBytes.byteLength,
+      );
+      offset += this.UnknownBytes.byteLength;
+      newBuffer.writeUInt16LE(this.DataOffset, offset);
+      offset += 2;
       for (let i = 0; i < this.Count; i++) {
-        newBuffer.writeUInt16LE(this.TocOffsetList[i], offset); offset += 2;
+        newBuffer.writeUInt16LE(this.TocOffsetList[i], offset);
+        offset += 2;
       }
       offset = Align(offset, 4);
     }
@@ -517,25 +563,41 @@ export class ALAR extends AL {
       entry = this.Files[i];
       if (this.Vers === 2) {
         // 固定长度16字节
-        newBuffer.writeUInt16LE(entry.Index, offset); offset += 2;
-        newBuffer.writeUInt16LE(entry.Unknown1, offset); offset += 2;
-        newBuffer.writeUInt32LE(entry.Address, offset); offset += 4;
-        newBuffer.writeUInt32LE(entry.Size, offset); offset += 4;
-        entry.Unknown2.copy(newBuffer, offset, 0, entry.Unknown2.byteLength); offset += entry.Unknown2.byteLength;
+        newBuffer.writeUInt16LE(entry.Index, offset);
+        offset += 2;
+        newBuffer.writeUInt16LE(entry.Unknown1, offset);
+        offset += 2;
+        newBuffer.writeUInt32LE(entry.Address, offset);
+        offset += 4;
+        newBuffer.writeUInt32LE(entry.Size, offset);
+        offset += 4;
+        entry.Unknown2.copy(newBuffer, offset, 0, entry.Unknown2.byteLength);
+        offset += entry.Unknown2.byteLength;
       }
       if (this.Vers === 3) {
-        newBuffer.writeUInt16LE(entry.Index, offset); offset += 2;
-        newBuffer.writeUInt16LE(entry.Unknown1, offset); offset += 2;
-        newBuffer.writeUInt32LE(entry.Address, offset); offset += 4;
-        newBuffer.writeUInt32LE(entry.Size, offset); offset += 4;
-        entry.Unknown2.copy(newBuffer, offset, 0, entry.Unknown2.byteLength); offset += entry.Unknown2.byteLength;
+        newBuffer.writeUInt16LE(entry.Index, offset);
+        offset += 2;
+        newBuffer.writeUInt16LE(entry.Unknown1, offset);
+        offset += 2;
+        newBuffer.writeUInt32LE(entry.Address, offset);
+        offset += 4;
+        newBuffer.writeUInt32LE(entry.Size, offset);
+        offset += 4;
+        entry.Unknown2.copy(newBuffer, offset, 0, entry.Unknown2.byteLength);
+        offset += entry.Unknown2.byteLength;
         const stringBuffer = new Buffer(entry.Name + '\0');
-        stringBuffer.copy(newBuffer, offset, 0, stringBuffer.byteLength); offset += stringBuffer.byteLength;
+        stringBuffer.copy(newBuffer, offset, 0, stringBuffer.byteLength);
+        offset += stringBuffer.byteLength;
         offset = Align(offset, 4);
       }
     }
-    if (this.Vers === 2) { offset += 2; }
-    if (offset !== this.DataOffsetByData) { console.log('包装的文件头 + 索引长度错误'); return new Buffer(0); }
+    if (this.Vers === 2) {
+      offset += 2;
+    }
+    if (offset !== this.DataOffsetByData) {
+      console.log('包装的文件头 + 索引长度错误');
+      return new Buffer(0);
+    }
     // 主体
     newFilesBuffer.copy(newBuffer, offset, 0, newFilesBuffer.byteLength);
     return newBuffer;
@@ -1067,7 +1129,6 @@ export class ALMT extends AL {
         return;
     }
   }
-
 }
 
 function parseObject(buffer: Buffer) {
@@ -1093,6 +1154,9 @@ function parseObject(buffer: Buffer) {
       break;
     case 'ALOD':
       r = new ALOD(buffer);
+      break;
+    case 'ALRD':
+      r = new ALRD(buffer);
       break;
     default:
       console.log(`Not Support type ${type}`);

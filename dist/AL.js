@@ -7,8 +7,7 @@ function Align(offset, length) {
     if (offset % length === 0) {
         return offset;
     }
-    ;
-    return offset + (length - offset % length);
+    return offset + (length - (offset % length));
 }
 class AL {
     constructor(buffer) {
@@ -164,6 +163,9 @@ class ALRD {
             this.Headers.push(header);
         }
     }
+    Package() {
+        return this.Buffer;
+    }
 }
 exports.ALRD = ALRD;
 (function (ALRD) {
@@ -287,7 +289,6 @@ class ALTB extends AL {
         if (this.StringOffsetList.length !== newOffsetList.length) {
             throw 'String数量错误';
         }
-        ;
         for (let i = 0; i < newOffsetList.length; i++) {
             offsetChanges[this.StringOffsetList[i]] = newOffsetList[i];
         }
@@ -317,8 +318,11 @@ class ALTB extends AL {
                 }
             }
         }
-        if (this.NameStartAddress !== undefined && this.NameStartAddressOffset !== undefined) {
-            const newNameStart = this.NameStartAddress + (alignStringFieldLength - (this.NameStartAddress - this.StringFieldEntry));
+        if (this.NameStartAddress !== undefined &&
+            this.NameStartAddressOffset !== undefined) {
+            const newNameStart = this.NameStartAddress +
+                (alignStringFieldLength -
+                    (this.NameStartAddress - this.StringFieldEntry));
             head.writeUInt32LE(newNameStart, this.NameStartAddressOffset);
         }
         const newBuffer = Buffer.alloc(size, 0);
@@ -344,7 +348,6 @@ class ALTB extends AL {
         if (this.StringField === undefined) {
             throw '该文件没有StringField';
         }
-        ;
         let count = 0;
         const bufferList = [];
         const offsetList = [];
@@ -1015,6 +1018,9 @@ function parseObject(buffer) {
             break;
         case 'ALOD':
             r = new ALOD(buffer);
+            break;
+        case 'ALRD':
+            r = new ALRD(buffer);
             break;
         default:
             console.log(`Not Support type ${type}`);

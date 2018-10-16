@@ -25,7 +25,7 @@ export declare class ALLZ extends AL {
     constructor(buffer: Buffer);
     Package(): Buffer;
 }
-export declare class ALRD {
+export declare class ALRD implements AL {
     Head: string;
     Vers: number;
     Count: number;
@@ -33,6 +33,7 @@ export declare class ALRD {
     Headers: ALRD.Header[];
     Buffer: Buffer;
     constructor(buffer: Buffer);
+    Package(): Buffer;
 }
 export declare namespace ALRD {
     class Header {
