@@ -35,8 +35,10 @@ export class DefaultAL extends AL {
   }
 }
 export class Text extends AL {
+  Content: string = '';
   constructor(buffer: Buffer) {
     super(buffer);
+    this.Content = buffer.toString('utf-8');
   }
   public Save(path: string) {
     fs.writeFileSync(path, this.Buffer);
