@@ -11,6 +11,7 @@ export declare class DefaultAL extends AL {
     constructor(buffer: Buffer);
 }
 export declare class Text extends AL {
+    Content: string;
     constructor(buffer: Buffer);
     Save(path: string): void;
 }
@@ -25,7 +26,7 @@ export declare class ALLZ extends AL {
     constructor(buffer: Buffer);
     Package(): Buffer;
 }
-export declare class ALRD implements AL {
+export declare class ALRD extends AL {
     Head: string;
     Vers: number;
     Count: number;
@@ -33,7 +34,6 @@ export declare class ALRD implements AL {
     Headers: ALRD.Header[];
     Buffer: Buffer;
     constructor(buffer: Buffer);
-    Package(): Buffer;
 }
 export declare namespace ALRD {
     class Header {

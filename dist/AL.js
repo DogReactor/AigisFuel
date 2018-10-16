@@ -37,6 +37,8 @@ exports.DefaultAL = DefaultAL;
 class Text extends AL {
     constructor(buffer) {
         super(buffer);
+        this.Content = '';
+        this.Content = buffer.toString('utf-8');
     }
     Save(path) {
         fs.writeFileSync(path, this.Buffer);
@@ -136,8 +138,9 @@ class ALLZ extends AL {
     }
 }
 exports.ALLZ = ALLZ;
-class ALRD {
+class ALRD extends AL {
     constructor(buffer) {
+        super(buffer);
         this.Buffer = buffer;
         const br = new BufferReader_1.BufferReader(buffer);
         this.Head = br.ReadString(4);
@@ -162,9 +165,6 @@ class ALRD {
             br.Align(4);
             this.Headers.push(header);
         }
-    }
-    Package() {
-        return this.Buffer;
     }
 }
 exports.ALRD = ALRD;
@@ -348,6 +348,7 @@ class ALTB extends AL {
         if (this.StringField === undefined) {
             throw '该文件没有StringField';
         }
+        ;
         let count = 0;
         const bufferList = [];
         const offsetList = [];
