@@ -67,12 +67,16 @@ export class BufferReader {
     this.position += 2;
     return value;
   }
+  ReadShort() {
+    const value = this.buffer.readInt16LE(this.position);
+    this.position += 2;
+    return value;
+  }
   ReadBytes(length: number) {
     const result = this.buffer.slice(this.position, this.position + length);
     this.position += length;
     return result;
   }
-
   ReadFloat() {
     const value = this.buffer.readFloatLE(this.position);
     this.position += 4;

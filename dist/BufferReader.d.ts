@@ -2,7 +2,7 @@
 export declare enum Origin {
     Begin = 0,
     End = 1,
-    Current = 2,
+    Current = 2
 }
 export declare class BufferReader {
     readonly Position: number;
@@ -19,6 +19,7 @@ export declare class BufferReader {
     ReadInt(): number;
     ReadByte(): number;
     ReadWord(): number;
+    ReadShort(): number;
     ReadBytes(length: number): Buffer;
     ReadFloat(): number;
     ReadBit(): number;
@@ -27,5 +28,5 @@ export declare class BufferReader {
     Seek(length: number, seekOrigin: Origin): void;
     Copy(target: Buffer, targetStart: number, length: number): void;
     Overflow(): boolean;
-    private ensure(count);
+    private ensure;
 }

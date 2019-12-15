@@ -68,8 +68,8 @@ export declare class ALTB extends AL {
     constructor(buffer: Buffer);
     Save(path: string): void;
     Package(path: string): Buffer;
-    private readReplacementFile(text);
-    private ReplaceStringList(replaceObject);
+    private readReplacementFile;
+    private ReplaceStringList;
 }
 export declare class ALAR extends AL {
     Files: ALAR.Entry[];
@@ -85,7 +85,7 @@ export declare class ALAR extends AL {
     constructor(buffer: Buffer);
     Save(path: string): void;
     Package(path: string): Buffer;
-    private parseTocEntry(br);
+    private parseTocEntry;
 }
 export declare namespace ALAR {
     class Entry {
@@ -196,6 +196,6 @@ export declare class ALMT extends AL {
     Unknown4: number;
     EntryOffset?: number;
     constructor(buffer: Buffer);
-    private parseField(name, br);
+    private parseField;
 }
 export declare function parseAL(buffer: Buffer): AL;

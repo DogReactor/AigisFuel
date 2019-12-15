@@ -64,6 +64,11 @@ class BufferReader {
         this.position += 2;
         return value;
     }
+    ReadShort() {
+        const value = this.buffer.readInt16LE(this.position);
+        this.position += 2;
+        return value;
+    }
     ReadBytes(length) {
         const result = this.buffer.slice(this.position, this.position + length);
         this.position += length;
