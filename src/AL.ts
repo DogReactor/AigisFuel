@@ -307,8 +307,12 @@ export class ALTB extends AL {
     if (!fs.existsSync(path)) {
       return this.Buffer;
     }
-    const replaceObject = this.readReplacementFile(fs.readFileSync(path, { encoding: 'utf-8' }));
-    if (replaceObject === null) { return this.Buffer };
+    const replaceObject = this.readReplacementFile(
+      fs.readFileSync(path, { encoding: 'utf-8' }),
+    );
+    if (replaceObject === null) {
+      return this.Buffer;
+    }
     const newStringField = this.ReplaceStringList(replaceObject);
     const newOffsetList = newStringField.offsetList;
     // 制作Offset变化Object
@@ -378,7 +382,9 @@ export class ALTB extends AL {
     return obj;
   }
   private ReplaceStringList(replaceObject: any) {
-    if (this.StringField === undefined) { throw '该文件没有StringField' };
+    if (this.StringField === undefined) {
+      throw '该文件没有StringField';
+    }
     let count = 0;
     const bufferList = [];
     const offsetList = [];
@@ -457,7 +463,7 @@ export class ALAR extends AL {
       } else {
         entry.Content = new DefaultAL(
           buffer.slice(entry.Address, entry.Address + entry.Size),
-        )
+        );
       }
 
       this.Files.push(entry);
@@ -471,7 +477,9 @@ export class ALAR extends AL {
   }
   public Save(path: string) {
     path = path.replace('.aar', '');
-    if (!fs.existsSync(path)) { fs.mkdirSync(path) };
+    if (!fs.existsSync(path)) {
+      fs.mkdirSync(path);
+    }
     for (const entry of this.Files) {
       entry.Content.Save(pathLib.join(path, entry.Name));
     }
@@ -961,6 +969,26 @@ export class ALOD extends AL {
             break;
           case 'ParentNodeID':
             value = br.ReadString(4);
+            break;
+          case 'Text':
+            value = br.ReadString();
+            break;
+          case 'Scale':
+          case 'Pos':
+            value = {
+              X: br.ReadFloat(),
+              Y: br.ReadFloat(),
+              Z: br.ReadFloat(),
+            };
+            break;
+          case 'WidgetSize':
+            // experiment
+            value = {
+              X: br.ReadWord(),
+              Y: br.ReadWord(),
+            };
+            break;
+          case 'WidgetSkinID':
             break;
           default:
             console.log(`Field not recognized: ${field}`);

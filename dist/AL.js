@@ -281,7 +281,6 @@ class ALTB extends AL {
         if (replaceObject === null) {
             return this.Buffer;
         }
-        ;
         const newStringField = this.ReplaceStringList(replaceObject);
         const newOffsetList = newStringField.offsetList;
         // 制作Offset变化Object
@@ -348,7 +347,6 @@ class ALTB extends AL {
         if (this.StringField === undefined) {
             throw '该文件没有StringField';
         }
-        ;
         let count = 0;
         const bufferList = [];
         const offsetList = [];
@@ -436,7 +434,6 @@ class ALAR extends AL {
         if (!fs.existsSync(path)) {
             fs.mkdirSync(path);
         }
-        ;
         for (const entry of this.Files) {
             entry.Content.Save(pathLib.join(path, entry.Name));
         }
@@ -863,6 +860,26 @@ class ALOD extends AL {
                         break;
                     case 'ParentNodeID':
                         value = br.ReadString(4);
+                        break;
+                    case 'Text':
+                        value = br.ReadString();
+                        break;
+                    case 'Scale':
+                    case 'Pos':
+                        value = {
+                            X: br.ReadFloat(),
+                            Y: br.ReadFloat(),
+                            Z: br.ReadFloat(),
+                        };
+                        break;
+                    case 'WidgetSize':
+                        // experiment
+                        value = {
+                            X: br.ReadWord(),
+                            Y: br.ReadWord(),
+                        };
+                        break;
+                    case 'WidgetSkinID':
                         break;
                     default:
                         console.log(`Field not recognized: ${field}`);
