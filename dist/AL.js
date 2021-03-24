@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const BufferReader_1 = require("./BufferReader");
 const fs = require("fs");
 const pathLib = require("path");
+const lz4 = require('lz4');
 function Align(offset, length) {
     if (offset % length === 0) {
         return offset;
@@ -45,6 +46,17 @@ class Text extends AL {
     }
 }
 exports.Text = Text;
+class ALL4 extends AL {
+    constructor(buffer) {
+        super(buffer);
+        const jump = buffer.slice(12);
+        this.Dst = lz4.decode(jump);
+    }
+    Package() {
+        return this.Buffer;
+    }
+}
+exports.ALL4 = ALL4;
 class ALLZ extends AL {
     constructor(buffer) {
         super(buffer);
@@ -1026,6 +1038,15 @@ function parseObject(buffer) {
             }
             catch (_a) {
                 r = lz;
+            }
+            break;
+        case 'ALL4':
+            const l4 = new ALL4(buffer);
+            try {
+                r = parseObject(l4.Dst);
+            }
+            catch (_b) {
+                r = l4;
             }
             break;
         case 'ALTB':

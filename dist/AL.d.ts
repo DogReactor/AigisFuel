@@ -15,6 +15,11 @@ export declare class Text extends AL {
     constructor(buffer: Buffer);
     Save(path: string): void;
 }
+export declare class ALL4 extends AL {
+    Dst: Buffer;
+    constructor(buffer: Buffer);
+    Package(): Buffer;
+}
 export declare class ALLZ extends AL {
     Vers: number;
     MinBitsLength: number;
