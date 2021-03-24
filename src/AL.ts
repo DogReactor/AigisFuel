@@ -1,6 +1,7 @@
 import { BufferReader, Origin } from './BufferReader';
 import * as fs from 'fs';
 import * as pathLib from 'path';
+const lz4 = require('lz4');
 
 function Align(offset: number, length: number) {
   if (offset % length === 0) {
@@ -44,6 +45,18 @@ export class Text extends AL {
   }
   public Save(path: string) {
     fs.writeFileSync(path, this.Buffer);
+  }
+}
+
+export class ALL4 extends AL {
+  Dst: Buffer;
+  constructor(buffer: Buffer) {
+    super(buffer);
+    const jump = buffer.slice(12);
+    this.Dst = lz4.decode(jump);
+  }
+  Package() {
+    return this.Buffer;
   }
 }
 
@@ -1145,6 +1158,14 @@ function parseObject(buffer: Buffer) {
         r = parseObject(lz.Dst);
       } catch {
         r = lz;
+      }
+      break;
+    case 'ALL4':
+      const l4 = new ALL4(buffer);
+      try {
+        r = parseObject(l4.Dst);
+      } catch {
+        r = l4;
       }
       break;
     case 'ALTB':
