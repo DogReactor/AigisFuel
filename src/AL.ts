@@ -790,8 +790,30 @@ export class ALIG extends AL {
     function convert(x: number) {
       return Math.floor(x / 8) * 64 + (x % 8) * 9;
     }
-    const rawImage: number[] = [];
+    let rawImageBuffer: Buffer[] = [];
     switch (this.Form) {
+      case 'PAL8':
+        this.PaletteSize = 256
+        for (let i = 0; i < 256; i++) {
+          this.Palette[i] = br.ReadBytes(4);
+        }
+
+        for (let i = 0; i < this.Size; i++) {
+          const index = br.ReadByte()
+          rawImageBuffer.push(this.Palette[index])
+        }
+        break;
+      case 'PAL6':
+        this.PaletteSize = 512
+        for(let i = 0; i < 512; i++) {
+          this.Palette[i] = br.ReadBytes(4)
+        }
+
+        for (let i = 0; i < this.Size; i++) {
+          const index = br.ReadWord();
+          rawImageBuffer.push(this.Palette[index])
+        }
+        break;
       case 'PAL4':
         this.PaletteSize = 16;
         for (let i = 0; i < this.PaletteSize; ++i) {
@@ -801,7 +823,7 @@ export class ALIG extends AL {
           const x = br.ReadByte();
           const low = x >> 4;
           const high = x & 0xf;
-          rawImage.push(...this.Palette[low], ...this.Palette[high]);
+          rawImageBuffer.push(this.Palette[low], this.Palette[high]);
         }
         break;
       case 'ABG5':
@@ -816,7 +838,7 @@ export class ALIG extends AL {
           g = convert(g);
           b = convert(b);
           a = Math.floor(a * (255 / 1) + 0.5);
-          rawImage.push(r, g, b, a);
+          rawImageBuffer.push(Buffer.from([r, g, b, a]));
         }
         break;
       case 'BGR5':
@@ -831,7 +853,7 @@ export class ALIG extends AL {
           g = convert(g);
           b = convert(b);
           a = Math.floor(a * (255 / 1) + 0.5);
-          rawImage.push(r, g, b, a);
+          rawImageBuffer.push(Buffer.from([r, g, b, a]));
         }
         break;
       case 'ABG4':
@@ -846,7 +868,7 @@ export class ALIG extends AL {
           g = Math.floor(g * (255 / 15) + 0.5);
           b = Math.floor(b * (255 / 15) + 0.5);
           a = Math.floor(a * (255 / 15) + 0.5);
-          rawImage.push(r, g, b, a);
+          rawImageBuffer.push(Buffer.from([r, g, b, a]));
         }
         break;
       case 'BGR4':
@@ -861,7 +883,7 @@ export class ALIG extends AL {
           g = Math.floor(g * (255 / 1) + 0.5);
           b = Math.floor(b * (255 / 1) + 0.5);
           a = Math.floor(a * (255 / 1) + 0.5);
-          rawImage.push(r, g, b, a);
+          rawImageBuffer.push(Buffer.from([r, g, b, a]));
         }
         break;
       case 'RGBA':
@@ -871,14 +893,14 @@ export class ALIG extends AL {
         const p = br.ReadBytes(4 * this.Size);
         for (let i = 0; i < p.length; i += 4) {
           const [b, g, r, a] = p.slice(i, 4).reverse();
-          rawImage.push(r, g, b, a);
+          rawImageBuffer.push(Buffer.from([r, g, b, a]));
         }
         break;
       default:
         console.log('Unknwon image format: ', this.Form);
         break;
     }
-    this.Image = Buffer.from(rawImage);
+    this.Image = Buffer.concat(rawImageBuffer);
   }
 }
 
@@ -1204,6 +1226,9 @@ function parseObject(buffer: Buffer) {
       break;
     case 'ALTX':
       r = new ALTX(buffer);
+      break;
+    case 'ALIG':
+      r = new ALIG(buffer);
       break;
     case 'ALOD':
       r = new ALOD(buffer);
