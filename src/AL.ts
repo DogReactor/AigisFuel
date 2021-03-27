@@ -466,9 +466,17 @@ export class ALAR extends AL {
     for (let i = 0; i < this.Count; i++) {
       const entry = this.parseTocEntry(br);
       if (pathLib.extname(entry.Name)[1] === 'a') {
+        try {
         entry.Content = parseObject(
           buffer.slice(entry.Address, entry.Address + entry.Size),
         );
+
+        } catch  (e) {
+          console.error(e)
+          entry.Content = new DefaultAL(
+            buffer.slice(entry.Address, entry.Address + entry.Size),
+          );
+        }
       } else if (pathLib.extname(entry.Name) === '.txt') {
         entry.Content = new Text(
           buffer.slice(entry.Address, entry.Address + entry.Size),
@@ -711,7 +719,10 @@ export class ALTX extends AL {
       br.Align(4);
       for (let i = 0; i < this.Count; ++i) {
         let frameName = '';
-        if (br.Position === blockStart[i] - 0x20) {
+        if (br.Position === blockStart[i] - 0x20 || (
+          i > 0 &&
+          br.Position === blockStart[0] - 0x20 + blockStart[i]
+        )) {
           frameName = br.ReadString(0x20);
         }
         const index = br.ReadWord();
