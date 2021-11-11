@@ -1,6 +1,6 @@
 {
   "name": "aigis-fuel",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "description": "Fuel!",
   "main": "./dist/AL.js",
   "types": "./dist/AL.d.ts",
@@ -36,6 +36,6 @@
     ]
   },
   "dependencies": {
-    "lz4": "^0.6.5"
+    "mini-lz4": "^3.0.0"
   }
 }
