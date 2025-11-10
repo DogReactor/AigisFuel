@@ -718,7 +718,9 @@ class ALIG extends AL {
         this.Size = this.Width * this.Height;
         this.Unknown5 = br.ReadWord();
         this.Unknown6 = br.ReadWord();
-        this.Unknown7 = br.ReadDword();
+        this.Unknown7 = br.ReadByte();
+        this.Unknown8 = br.ReadByte();
+        this.Unknown9 = br.ReadWord();
         function convert(x) {
             return Math.floor(x / 8) * 64 + (x % 8) * 9;
         }
@@ -735,7 +737,7 @@ class ALIG extends AL {
                 }
                 break;
             case 'PAL6':
-                this.PaletteSize = this.unk8 === 10 ? 1024 : 512;
+                this.PaletteSize = this.Unknown8 === 0x10 ? 1024 : 512;
                 for (let i = 0; i < this.PaletteSize; i++) {
                     this.Palette[i] = br.ReadBytes(4);
                 }
