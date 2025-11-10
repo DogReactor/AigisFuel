@@ -472,7 +472,7 @@ export class ALAR extends AL {
 				);
 
 				} catch (e) {
-					console.error(e)
+					console.error(`${this.Name}/${entry.Name}: ${e}`);
 					entry.Content = new DefaultAL(
 						buffer.slice(entry.Address, entry.Address + entry.Size),
 					);
@@ -713,9 +713,20 @@ export class ALTX extends AL {
 		const aligOffset = startOffset + br.ReadDword();
 		if (this.Form === 0) {
 			const blockStart = [];
-			for (let i = 0; i < this.Count; ++i) {
-				blockStart.push(startOffset + br.ReadWord());
+			if (this.Vers === 0) {
+				for (let i = 0; i < this.Count; ++i) {
+					blockStart.push(startOffset + br.ReadWord());
+				}
+			} else if (this.Vers === 1) {
+				let startAddr = startOffset;
+				for (let i = 0; i < this.Count; ++i) {
+					startAddr = startAddr + br.ReadWord();
+					blockStart.push(startAddr);
+				}
+			} else {
+				throw Error(`ALTX Unknown Version: ${this.Vers}`);
 			}
+			
 			br.Align(4);
 			for (let i = 0; i < this.Count; ++i) {
 				let frameName = '';
@@ -742,9 +753,11 @@ export class ALTX extends AL {
 					};
 					frameTable.push(frame);
 				}
-				for (let j = 0; j < frames; ++j) {
-					frameTable[j].OriginX = br.ReadShort();
-					frameTable[j].OriginY = br.ReadShort();
+				if (this.Unknown2 !== 5) {
+					for (let j = 0; j < frames; ++j) {
+						frameTable[j].OriginX = br.ReadShort();
+						frameTable[j].OriginY = br.ReadShort();
+					}
 				}
 				this.Sprites[index] = frameTable;
 			}
@@ -815,8 +828,8 @@ export class ALIG extends AL {
 				}
 				break;
 			case 'PAL6':
-				this.PaletteSize = 512
-				for(let i = 0; i < 512; i++) {
+				this.PaletteSize = this.unk8 === 10 ? 1024 : 512;
+				for(let i = 0; i < this.PaletteSize; i++) {
 					this.Palette[i] = br.ReadBytes(4)
 				}
 
@@ -890,10 +903,10 @@ export class ALIG extends AL {
 					let g = extractor.extract(16);
 					let r = extractor.extract(16);
 					let a = extractor.extract(16);
-					r = Math.floor(r * (255 / 1) + 0.5);
-					g = Math.floor(g * (255 / 1) + 0.5);
-					b = Math.floor(b * (255 / 1) + 0.5);
-					a = Math.floor(a * (255 / 1) + 0.5);
+					r = Math.floor(r * (255 / 15) + 0.5);
+					g = Math.floor(g * (255 / 15) + 0.5);
+					b = Math.floor(b * (255 / 15) + 0.5);
+					a = Math.floor(a * (255 / 15) + 0.5);
 					rawImageBuffer.push(Buffer.from([r, g, b, a]));
 				}
 				break;
@@ -1218,7 +1231,7 @@ function parseObject(buffer: Buffer) {
 			try {
 				r = parseObject(lz.Dst);
 			} catch(e) {
-        console.error(e);
+			console.error(e);
 				r = lz;
 			}
 			break;
@@ -1227,8 +1240,8 @@ function parseObject(buffer: Buffer) {
 			try {
 				r = parseObject(l4.Dst);
 			} catch(e) {
-        r = l4;
-        console.error(e);
+			r = l4;
+			console.error(e);
 			}
 			break;
 		case 'ALTB':
