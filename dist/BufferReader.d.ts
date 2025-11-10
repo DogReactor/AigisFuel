@@ -5,8 +5,8 @@ export declare enum Origin {
     Current = 2
 }
 export declare class BufferReader {
-    readonly Position: number;
-    readonly Length: number;
+    get Position(): number;
+    get Length(): number;
     private buffer;
     private position;
     private length;

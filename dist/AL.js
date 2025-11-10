@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.parseAL = exports.ALMT = exports.ALOD = exports.ALIG = exports.ALTX = exports.ALAR = exports.ALTB = exports.ALRD = exports.ALLZ = exports.ALL4 = exports.Text = exports.DefaultAL = exports.AL = void 0;
 const BufferReader_1 = require("./BufferReader");
 const fs = require("fs");
 const pathLib = require("path");
@@ -428,7 +429,7 @@ class ALAR extends AL {
                     entry.Content = parseObject(buffer.slice(entry.Address, entry.Address + entry.Size));
                 }
                 catch (e) {
-                    console.error(e);
+                    console.error(`${this.Name}/${entry.Name}: ${e}`);
                     entry.Content = new DefaultAL(buffer.slice(entry.Address, entry.Address + entry.Size));
                 }
             }
@@ -633,8 +634,20 @@ class ALTX extends AL {
         const aligOffset = startOffset + br.ReadDword();
         if (this.Form === 0) {
             const blockStart = [];
-            for (let i = 0; i < this.Count; ++i) {
-                blockStart.push(startOffset + br.ReadWord());
+            if (this.Vers === 0) {
+                for (let i = 0; i < this.Count; ++i) {
+                    blockStart.push(startOffset + br.ReadWord());
+                }
+            }
+            else if (this.Vers === 1) {
+                let startAddr = startOffset;
+                for (let i = 0; i < this.Count; ++i) {
+                    startAddr = startAddr + br.ReadWord();
+                    blockStart.push(startAddr);
+                }
+            }
+            else {
+                throw Error(`ALTX Unknown Version: ${this.Vers}`);
             }
             br.Align(4);
             for (let i = 0; i < this.Count; ++i) {
@@ -660,9 +673,11 @@ class ALTX extends AL {
                     };
                     frameTable.push(frame);
                 }
-                for (let j = 0; j < frames; ++j) {
-                    frameTable[j].OriginX = br.ReadShort();
-                    frameTable[j].OriginY = br.ReadShort();
+                if (this.Unknown2 !== 5) {
+                    for (let j = 0; j < frames; ++j) {
+                        frameTable[j].OriginX = br.ReadShort();
+                        frameTable[j].OriginY = br.ReadShort();
+                    }
                 }
                 this.Sprites[index] = frameTable;
             }
@@ -720,8 +735,8 @@ class ALIG extends AL {
                 }
                 break;
             case 'PAL6':
-                this.PaletteSize = 512;
-                for (let i = 0; i < 512; i++) {
+                this.PaletteSize = this.unk8 === 10 ? 1024 : 512;
+                for (let i = 0; i < this.PaletteSize; i++) {
                     this.Palette[i] = br.ReadBytes(4);
                 }
                 for (let i = 0; i < this.Size; i++) {
@@ -794,10 +809,10 @@ class ALIG extends AL {
                     let g = extractor.extract(16);
                     let r = extractor.extract(16);
                     let a = extractor.extract(16);
-                    r = Math.floor(r * (255 / 1) + 0.5);
-                    g = Math.floor(g * (255 / 1) + 0.5);
-                    b = Math.floor(b * (255 / 1) + 0.5);
-                    a = Math.floor(a * (255 / 1) + 0.5);
+                    r = Math.floor(r * (255 / 15) + 0.5);
+                    g = Math.floor(g * (255 / 15) + 0.5);
+                    b = Math.floor(b * (255 / 15) + 0.5);
+                    a = Math.floor(a * (255 / 15) + 0.5);
                     rawImageBuffer.push(Buffer.from([r, g, b, a]));
                 }
                 break;
