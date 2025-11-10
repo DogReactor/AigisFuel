@@ -34,6 +34,6 @@
     ]
   },
   "dependencies": {
-    "mini-lz4": "github:Yukimir/mini-lz4"
+    "mini-lz4": "git+https://github.com/Yukimir/mini-lz4.git"
   }
 }
