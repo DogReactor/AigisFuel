@@ -261,7 +261,7 @@ export class ALTB extends AL {
 			this.NameStartAddressOffset = br.Position;
 			this.NameStartAddress = br.ReadDword();
 		}
-		if (this.Form !== 0x04) {
+		if (this.Form !== 0x04 && this.Form !== 0x00) {
 			this.Label = br.ReadString(4);
 		}
 		const alrdBuffer = br.ReadBytes(this.TableEntry - br.Position);
@@ -730,10 +730,7 @@ export class ALTX extends AL {
 			br.Align(4);
 			for (let i = 0; i < this.Count; ++i) {
 				let frameName = '';
-				if (br.Position === blockStart[i] - 0x20 || (
-					i > 0 &&
-					br.Position === blockStart[0] - 0x20 + blockStart[i]
-				)) {
+				if (br.Position === blockStart[i] - 0x20) {
 					frameName = br.ReadString(0x20);
 				}
 				const index = br.ReadWord();
